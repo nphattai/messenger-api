@@ -5,8 +5,12 @@ services:
     image: postgres:13-alpine
     ports:
       - 5432:5432
+    volumes:
+      - ./db/data:/var/lib/postgresql/data
     env_file:
       - .env
+    networks:
+      - messenger
 
   rabbitmq:
     image: rabbitmq:3-management
@@ -19,6 +23,8 @@ services:
       - 15672:15672
     env_file:
       - .env
+    networks:
+      - messenger
 
   api:
     build:
@@ -34,6 +40,8 @@ services:
     volumes:
       - .:/usr/src/app
       - ./node_modules:/usr/src/app/node_modules
+    networks:
+      - messenger
     command: yarn start:dev messenger-api
 
   auth:
@@ -48,7 +56,11 @@ services:
     volumes:
       - .:/usr/src/app
       - ./node_modules:/usr/src/app/node_modules
+    networks:
+      - messenger
     command: yarn start:dev auth
 
 volumes:
   rabbitmq:
+networks:
+  messenger:
