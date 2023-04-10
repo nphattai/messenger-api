@@ -1,6 +1,13 @@
 version: '3'
 
 services:
+  postgres:
+    image: postgres:13-alpine
+    ports:
+      - 5432:5432
+    env_file:
+      - .env
+
   rabbitmq:
     image: rabbitmq:3-management
     container_name: rabbitmq
@@ -12,6 +19,36 @@ services:
       - 15672:15672
     env_file:
       - .env
+
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/messenger-api/Dockerfile
+    ports:
+      - 3000:3000
+    env_file:
+      - .env
+    depends_on:
+      - rabbitmq
+      - auth
+    volumes:
+      - .:/usr/src/app
+      - ./node_modules:/usr/src/app/node_modules
+    command: yarn start:dev messenger-api
+
+  auth:
+    build:
+      context: .
+      dockerfile: ./apps/auth/Dockerfile
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - rabbitmq
+    volumes:
+      - .:/usr/src/app
+      - ./node_modules:/usr/src/app/node_modules
+    command: yarn start:dev auth
 
 volumes:
   rabbitmq:
